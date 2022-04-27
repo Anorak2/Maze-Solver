@@ -1,18 +1,23 @@
 package com.example.mazesolver;
 
-import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.animation.TranslateTransition;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.Slider;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
-import javafx.util.Duration;
 
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.ResourceBundle;
 
-public class MazeSolverController {
+public class MazeSolverController implements Initializable {
     public class Block{
         boolean isExplored = false;
         boolean isWall, isStart, isFinish, isEmpty;
@@ -43,6 +48,10 @@ public class MazeSolverController {
     }
     @FXML
     GridPane mazeGridPane;
+    @FXML
+    Circle playerCircle;
+    @FXML
+    Slider speedSlider;
 
 
     //0 is clear space, 1 is a wall, 2 is start, 3 is finish, 4 is explored
@@ -52,35 +61,37 @@ public class MazeSolverController {
     int gridSize = 8;
     long tileSize = (long) 500/gridSize;
     boolean finished = false;
-    Circle playerCircle;
     Queue<int[]> path = new LinkedList<>();
+    SequentialTransition masterAnimation = new SequentialTransition();
 
-    public void initialize() {
+
+    public void initialize(URL url, ResourceBundle resourceBundle) {
         mainMaze = new Block[gridSize][gridSize];
         mazeGridPane.getChildren().clear();
         loadPreset(1);
         printMaze();
         displayMaze();
+        playerCircle.setRadius(tileSize/2);
+        playerCircle.setCenterX(50 + playerCircle.getRadius() + gridSize*startLocation[1]);
+        playerCircle.setCenterY(50 + playerCircle.getRadius() + gridSize*startLocation[0]);
+        startMazeAlgorithm();
+        slider();
+    }
 
+    public void refresh() {
+        mainMaze = new Block[gridSize][gridSize];
+        mazeGridPane.getChildren().clear();
+        loadPreset(1);
+        printMaze();
+        displayMaze();
+        playerCircle.setCenterX(550 + gridSize*startLocation[1]);
+        playerCircle.setCenterY(550 + gridSize*startLocation[0]);
     }
 
     public void startMazeAlgorithm(){
         path.clear();
         mazeAlgorithm(startLocation[0], startLocation[1]);
-
-        int[] temp;
-        int loop = path.size();
-        for(int x = 0; x < loop; x++) {
-            temp = path.remove();
-            path.add(temp);
-            GridPane.setColumnIndex(playerCircle, temp[1]);
-            GridPane.setRowIndex(playerCircle, temp[0]);
-            try {
-                Thread.sleep(250);
-            }catch ( Exception e){
-                e.printStackTrace();
-            }
-        }
+        setupAnimations();
     }
     public void mazeAlgorithm(int row, int col){
         System.out.println(row + " " + col);
@@ -135,6 +146,36 @@ public class MazeSolverController {
         }
         return false;
     }
+    public void setupAnimations(){
+        int[] temp;
+        int loop = path.size();
+        System.out.println();
+
+        //Adding the translations
+        for(int x = 0; x < loop; x++) {
+            temp = path.remove();
+            TranslateTransition translate = new TranslateTransition();
+            translate.setNode(playerCircle);
+            translate.setToY(tileSize * temp[0]);
+            translate.setToX(tileSize * temp[1]);
+
+            masterAnimation.getChildren().add(translate);
+            path.add(temp);
+        }
+    }
+    //masterAnimation.setRate(1);
+    //masterAnimation.play();
+
+    public void play(){
+        masterAnimation.play();
+    }
+    public void pause(){
+        masterAnimation.pause();
+    }
+    public void slider(){
+        speedSlider.valueProperty().addListener((observable, oldValue, newValue) -> masterAnimation.setRate(( double) newValue));
+    }
+
 
     private void finish(){
         finished = true;
@@ -171,10 +212,8 @@ public class MazeSolverController {
                     mazeGridPane.add(newRectangle, col, row);
                 }
                 if(mainMaze[row][col].isStart) {
-                    playerCircle = new Circle(gridSize*3+6, Color.GREEN);
                     startLocation[0] = row;
                     startLocation[1] = col;
-                    mazeGridPane.add(playerCircle, col, row);
                 }
                 if(mainMaze[row][col].isFinish) {
                     Circle newCircle = new Circle(gridSize*3, Color.RED);

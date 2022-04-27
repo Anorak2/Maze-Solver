@@ -3,7 +3,10 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
@@ -11,16 +14,24 @@
    <children>
       <Rectangle disable="true" fill="#fbfbff" height="675.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="600.0" />
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#757575" height="500.0" layoutX="50.0" layoutY="50.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="500.0" />
-      <Button layoutX="50.0" layoutY="597.5" mnemonicParsing="false" onAction="#startMazeAlgorithm" prefHeight="30.0" prefWidth="66.0" style="-fx-background-color: #0b4f6c;" text="START" textFill="#fbfbff">
+      <Button layoutX="50.0" layoutY="597.5" mnemonicParsing="false" onAction="#play" prefHeight="30.0" prefWidth="66.0" style="-fx-background-color: #0b4f6c;" text="START" textFill="#fbfbff">
          <font>
             <Font name="Helvetica Neue" size="14.0" />
          </font></Button>
-      <Button layoutX="189.0" layoutY="597.5" mnemonicParsing="false" prefHeight="30.0" prefWidth="66.0" style="-fx-background-color: #0b4f6c #0b4f6c;" text="PAUSE" textFill="#fbfbff">
+      <Button layoutX="189.0" layoutY="597.5" mnemonicParsing="false" onAction="#pause" prefHeight="30.0" prefWidth="66.0" style="-fx-background-color: #0b4f6c #0b4f6c;" text="PAUSE" textFill="#fbfbff">
          <font>
             <Font name="Helvetica Neue" size="14.0" />
          </font></Button>
-      <Slider layoutX="350.0" layoutY="597.5" prefHeight="30.0" prefWidth="200.0" scaleZ="50.0" />
+      <Slider fx:id="speedSlider" blockIncrement="0.5" layoutX="350.0" layoutY="598.0" max="4.0" min="-4.0" prefHeight="30.0" prefWidth="200.0" scaleZ="50.0" value="1.0" />
       <GridPane fx:id="mazeGridPane" layoutX="50.0" layoutY="50.0" prefHeight="500.0" prefWidth="500.0">
-      </GridPane>
+         <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+         </rowConstraints></GridPane>
+      <Circle fx:id="playerCircle" fill="#20bf55" radius="52.0" stroke="BLACK" strokeType="INSIDE" />
    </children>
 </AnchorPane>
