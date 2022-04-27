@@ -2,11 +2,12 @@ package com.example.mazesolver;
 
 import javafx.animation.SequentialTransition;
 import javafx.animation.TranslateTransition;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Slider;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -38,13 +39,6 @@ public class MazeSolverController implements Initializable {
                 isFinish = true;
             }
         }
-
-        public Block(boolean isWall, boolean isStart, boolean isFinish){
-            this.isWall = isWall;
-            this.isStart = isStart;
-            this.isFinish = isFinish;
-        }
-
     }
     @FXML
     GridPane mazeGridPane;
@@ -52,6 +46,8 @@ public class MazeSolverController implements Initializable {
     Circle playerCircle;
     @FXML
     Slider speedSlider;
+    @FXML
+    ImageView pauseImage, playImage;
 
 
     //0 is clear space, 1 is a wall, 2 is start, 3 is finish, 4 is explored
@@ -60,7 +56,7 @@ public class MazeSolverController implements Initializable {
     int[] startLocation = new int[2];
     int gridSize = 8;
     long tileSize = (long) 500/gridSize;
-    boolean finished = false;
+    boolean finished = false, isPlaying = false;
     Queue<int[]> path = new LinkedList<>();
     SequentialTransition masterAnimation = new SequentialTransition();
 
@@ -74,18 +70,10 @@ public class MazeSolverController implements Initializable {
         playerCircle.setRadius(tileSize/2);
         playerCircle.setCenterX(50 + playerCircle.getRadius() + gridSize*startLocation[1]);
         playerCircle.setCenterY(50 + playerCircle.getRadius() + gridSize*startLocation[0]);
+
+
         startMazeAlgorithm();
         slider();
-    }
-
-    public void refresh() {
-        mainMaze = new Block[gridSize][gridSize];
-        mazeGridPane.getChildren().clear();
-        loadPreset(1);
-        printMaze();
-        displayMaze();
-        playerCircle.setCenterX(550 + gridSize*startLocation[1]);
-        playerCircle.setCenterY(550 + gridSize*startLocation[0]);
     }
 
     public void startMazeAlgorithm(){
@@ -162,15 +150,21 @@ public class MazeSolverController implements Initializable {
             masterAnimation.getChildren().add(translate);
             path.add(temp);
         }
+        masterAnimation.setOnFinished(e -> {
+            toggle();
+        });
     }
-    //masterAnimation.setRate(1);
-    //masterAnimation.play();
 
-    public void play(){
-        masterAnimation.play();
-    }
-    public void pause(){
-        masterAnimation.pause();
+    public void toggle(){
+        if(isPlaying){
+            masterAnimation.pause();
+        }
+        else {
+            masterAnimation.play();
+        }
+        pauseImage.setVisible(!isPlaying);
+        playImage.setVisible(isPlaying);
+        isPlaying = !isPlaying;
     }
     public void slider(){
         speedSlider.valueProperty().addListener((observable, oldValue, newValue) -> masterAnimation.setRate(( double) newValue));
