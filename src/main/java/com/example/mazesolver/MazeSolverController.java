@@ -2,13 +2,14 @@ package com.example.mazesolver;
 
 import javafx.animation.SequentialTransition;
 import javafx.animation.TranslateTransition;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -19,27 +20,29 @@ import java.util.Queue;
 import java.util.ResourceBundle;
 
 public class MazeSolverController implements Initializable {
-    public class Block{
+    public static class Block{
         boolean isExplored = false;
-        boolean isWall, isStart, isFinish, isEmpty;
+        boolean isWall, isStart, isFinish, canMoveHere;
 
         public Block(int x){
             isWall = false;
             isStart = false;
             isFinish = false;
-            isEmpty = true;
+            canMoveHere = true;
             if(x == 1){
                 isWall = true;
-                isEmpty = false;
+                canMoveHere = false;
             }
-            if(x == 2){
+            else if(x == 2){
                 isStart = true;
             }
-            if(x == 3){
+            else if(x == 3){
                 isFinish = true;
             }
         }
     }
+
+
     @FXML
     GridPane mazeGridPane;
     @FXML
@@ -48,6 +51,10 @@ public class MazeSolverController implements Initializable {
     Slider speedSlider;
     @FXML
     ImageView pauseImage, playImage;
+    @FXML
+    Rectangle clickDetection;
+    @FXML
+    AnchorPane playScreen, buildScreen;
 
 
     //0 is clear space, 1 is a wall, 2 is start, 3 is finish, 4 is explored
@@ -56,7 +63,7 @@ public class MazeSolverController implements Initializable {
     int[] startLocation = new int[2];
     int gridSize = 8;
     long tileSize = (long) 500/gridSize;
-    boolean finished = false, isPlaying = false;
+    boolean finished = false, isPlaying = false, placeMode = false, isBuild = false;
     Queue<int[]> path = new LinkedList<>();
     SequentialTransition masterAnimation = new SequentialTransition();
 
@@ -65,12 +72,12 @@ public class MazeSolverController implements Initializable {
         mainMaze = new Block[gridSize][gridSize];
         mazeGridPane.getChildren().clear();
         loadPreset(1);
-        printMaze();
+        //printMaze();
         displayMaze();
         playerCircle.setRadius(tileSize/2);
         playerCircle.setCenterX(50 + playerCircle.getRadius() + gridSize*startLocation[1]);
         playerCircle.setCenterY(50 + playerCircle.getRadius() + gridSize*startLocation[0]);
-
+        clickDetection.setOnMouseClicked(e -> click(e));
 
         startMazeAlgorithm();
         slider();
@@ -78,6 +85,7 @@ public class MazeSolverController implements Initializable {
 
     public void startMazeAlgorithm(){
         path.clear();
+        masterAnimation = new SequentialTransition();
         mazeAlgorithm(startLocation[0], startLocation[1]);
         setupAnimations();
     }
@@ -111,7 +119,6 @@ public class MazeSolverController implements Initializable {
         if(canMove(row, col, common, col) && !mainMaze[common][col].isExplored && !finished){
             mazeAlgorithm(common, col);
         }
-
     }
 
     private boolean canMove(int row, int col, int newRow, int newCol){
@@ -126,11 +133,11 @@ public class MazeSolverController implements Initializable {
         }
         //Checking move up/down
         else if((row + 1 == newRow || row - 1 == newRow) && col == newCol){
-            return mainMaze[newRow][newCol].isEmpty;
+            return mainMaze[newRow][newCol].canMoveHere;
         }
         // checking move left/right
         else if((col + 1 == newCol || col - 1 == newCol) && row == newRow){
-            return mainMaze[newRow][newCol].isEmpty;
+            return mainMaze[newRow][newCol].canMoveHere;
         }
         return false;
     }
@@ -150,9 +157,7 @@ public class MazeSolverController implements Initializable {
             masterAnimation.getChildren().add(translate);
             path.add(temp);
         }
-        masterAnimation.setOnFinished(e -> {
-            toggle();
-        });
+        masterAnimation.setOnFinished(e -> toggle());
     }
 
     public void toggle(){
@@ -169,11 +174,47 @@ public class MazeSolverController implements Initializable {
     public void slider(){
         speedSlider.valueProperty().addListener((observable, oldValue, newValue) -> masterAnimation.setRate(( double) newValue));
     }
+    public void placeModeOn(){
+        placeMode = true;
+    }
+    public void placeModeOff(){
+        placeMode = false;
+    }
+    public void toggleBuildMode() {
+        isBuild = !isBuild;
+        playScreen.setVisible(!isBuild);
+        buildScreen.setVisible(isBuild);
+        if(!isBuild){
+            mainMaze[6][5] = new Block(3);
+            mainMaze[0][0] = new Block(2);
+            finished = false;
+            displayMaze();
+            startMazeAlgorithm();
+        }
+    }
 
+    public void click(MouseEvent e){
+        System.out.println("yeet");
+        if(!isBuild){
+            return;
+        }
+        int row = (int) ((e.getY())/tileSize);
+        int col = (int) ((e.getX())/tileSize);
+        if(placeMode){
+            mainMaze[row][col] = new Block(1);
+        }
+        else{
+            mainMaze[row][col] = new Block(0);
+        }
+        displayMaze();
+    }
+    public void clear(){
+        loadPreset(0);
+        displayMaze();
+    }
 
     private void finish(){
         finished = true;
-        System.out.println("yay");
     }
     private void printMaze(){
         int loop = gridSize;
@@ -188,7 +229,7 @@ public class MazeSolverController implements Initializable {
                 else if(mainMaze[x][y].isFinish) {
                     System.out.print("F ");
                 }
-                else if(mainMaze[x][y].isEmpty) {
+                else if(mainMaze[x][y].canMoveHere) {
                     System.out.print(". ");
                 }
             }
@@ -198,11 +239,17 @@ public class MazeSolverController implements Initializable {
     private void displayMaze(){
         mazeGridPane.getChildren().clear();
 
-        int loop = gridSize;
-        for(int row = 0; row < loop; row++) {
-            for (int col = 0; col < loop; col++) {
+        for(int row = 0; row < gridSize; row++) {
+            for (int col = 0; col < gridSize; col++) {
                 if(mainMaze[row][col].isWall) {
-                    Rectangle newRectangle = new Rectangle(tileSize, tileSize, Color.web("20bf55"));
+                    Region newRectangle = new Region();
+                    String x = roundCorners(row, col);
+                    newRectangle.setStyle(x);
+                    mazeGridPane.add(newRectangle, col, row);
+                }
+                if(!mainMaze[row][col].isWall){
+                    Rectangle newRectangle = new Rectangle(tileSize, tileSize);
+                    newRectangle.setOpacity(0);
                     mazeGridPane.add(newRectangle, col, row);
                 }
                 if(mainMaze[row][col].isStart) {
@@ -216,7 +263,198 @@ public class MazeSolverController implements Initializable {
             }
         }
     }
+    private String roundCorners(int row, int col){
+        int[] roundness = {0, 0, 0, 0};
+        int roundnessValue = 10;
+        //If it is not an edge
+        if(row+1 <= 7 && row-1 >= 0 && col+1 <= 7 && col-1 >= 0){
+            //Checks up and left
+            if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                roundness[0] = roundnessValue;
+            }
+            //Checks up and right
+            if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                roundness[1] = roundnessValue;
+            }
+            //Checks down and right
+            if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                roundness[2] = roundnessValue;
+            }
+            //Checks down and left
+            if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                roundness[3] = roundnessValue;
+            }
+        }
+        //If it is an edge
+        else{
+            //-------Corners-------
+            if((row + 1 >= 7 && col - 1 <= 0) || (row + 1 >= 7 && col + 1 >= 7) ||
+                    (row - 1 <= 0 && col + 1 >= 7) || (row - 1 <= 0 && col - 1 <= 0)) {
+                //top left corner
+                if (row + 1 >= 7 && col - 1 <= 0) {
+                    roundness[0] = roundnessValue;
+                    //Checks up and right
+                    if(mainMaze[row][col+1].canMoveHere) {
+                        roundness[1] = roundnessValue;
+                    }
+                    //Checks down and right
+                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                        roundness[2] = roundnessValue;
+                    }
+                    //Checks down and left
+                    if(mainMaze[row-1][col].canMoveHere ) {
+                        roundness[3] = roundnessValue;
+                    }
+                }
+                //top right corner
+                else if (row + 1 >= 7) {
+                    roundness[1] = roundnessValue;
+                    //Checks up and left
+                    if(mainMaze[row][col-1].canMoveHere) {
+                        roundness[0] = roundnessValue;
+                    }
+                    //Checks down and right
+                    if(mainMaze[row-1][col].canMoveHere) {
+                        roundness[2] = roundnessValue;
+                    }
+                    //Checks down and left
+                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                        roundness[3] = roundnessValue;
+                    }
+                }
+                //bottom right corner
+                else if (col + 1 >= 7) {
+                    roundness[2] = roundnessValue;
+                    //Checks up and left
+                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                        roundness[0] = roundnessValue;
+                    }
+                    //Checks up and right
+                    if(mainMaze[row+1][col].canMoveHere) {
+                        roundness[1] = roundnessValue;
+                    }
+                    //Checks down and left
+                    if(mainMaze[row][col-1].canMoveHere) {
+                        roundness[3] = roundnessValue;
+                    }
+                }
+                //bottom left corner
+                else {
+                    roundness[3] = roundnessValue;
+                    //Checks up and left
+                    if(mainMaze[row+1][col].canMoveHere) {
+                        roundness[0] = roundnessValue;
+                    }
+                    //Checks up and right
+                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                        roundness[1] = roundnessValue;
+                    }
+                    //Checks down and right
+                    if(mainMaze[row][col+1].canMoveHere) {
+                        roundness[2] = roundnessValue;
+                    }
+
+                }
+            }
+
+            //-------Edges-------
+            else{
+                //up
+                if(row + 1 >= 7){
+                    //Checks up and left
+                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                        roundness[0] = roundnessValue;
+                    }
+                    //Checks up and right
+                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                        roundness[1] = roundnessValue;
+                    }
+                    //Checks down and right
+                    if(mainMaze[row][col+1].canMoveHere) {
+                        roundness[2] = roundnessValue;
+                    }
+                    //Checks down and left
+                    if(mainMaze[row][col-1].canMoveHere) {
+                        roundness[3] = roundnessValue;
+                    }
+                }
+                //down
+                else if(row - 1 <= 0){
+                    //Checks up and right
+                    if(mainMaze[row][col-1].canMoveHere) {
+                        roundness[0] = roundnessValue;
+                    }
+                    //Checks up and right
+                    if(mainMaze[row][col+1].canMoveHere) {
+                        roundness[1] = roundnessValue;
+                    }
+                    //Checks down and right
+                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                        roundness[2] = roundnessValue;
+                    }
+                    //Checks down and left
+                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                        roundness[3] = roundnessValue;
+                    }
+                }
+                //left
+                else if(col - 1 <= 0){
+                    //Checks up and left
+                    if(mainMaze[row-1][col].canMoveHere) {
+                        roundness[0] = roundnessValue;
+                    }
+                    //Checks up and right
+                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                        roundness[1] = roundnessValue;
+                    }
+                    //Checks down and right
+                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                        roundness[2] = roundnessValue;
+                    }
+                    //Checks down and left
+                    if(mainMaze[row+1][col].canMoveHere) {
+                        roundness[3] = roundnessValue;
+                    }
+                }
+                //right
+                else{
+                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                        roundness[0] = roundnessValue;
+                    }
+                    //Checks up and right
+                    if(mainMaze[row-1][col].canMoveHere) {
+                        roundness[1] = roundnessValue;
+                    }
+                    //Checks down and right
+                    if(mainMaze[row+1][col].canMoveHere) {
+                        roundness[2] = roundnessValue;
+                    }
+                    //Checks down and left
+                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                        roundness[3] = roundnessValue;
+                    }
+                }
+            }
+        }
+
+            StringBuilder build = new StringBuilder();
+        build.append("-fx-background-color: #20bf55; -fx-background-radius: ");
+        for(int i = 0; i < 4; i++){
+            build.append(" ");
+            build.append(roundness[i]);
+        }
+        //build.append(";");
+
+        return build.toString();
+    }
     private void loadPreset(int x){
+        if(x == 0){
+            int[] temp;
+            temp = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
+            for(int z = 0; z < 8; z++){
+                loadPresetHelper(temp, z);
+            }
+        }
         if(x == 1){
             int[] temp =    {2, 0, 1, 0, 0, 0, 0, 1};
             loadPresetHelper(temp, 0);
@@ -241,5 +479,4 @@ public class MazeSolverController implements Initializable {
             mainMaze[currentRow][i] = new Block(list[i]);
         }
     }
-
 }

@@ -11,12 +11,10 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Rectangle?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="675.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.mazesolver.MazeSolverController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="675.0" prefWidth="600.0" stylesheets="@../../../Css/CSS.css" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.mazesolver.MazeSolverController">
    <children>
-      <Rectangle disable="true" fill="#fbfbff" height="675.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" visible="false" width="600.0" />
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#757575" height="500.0" layoutX="50.0" layoutY="50.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="500.0" />
-      <Slider fx:id="speedSlider" blockIncrement="0.5" layoutX="207.0" layoutY="622.0" max="4.0" min="-4.0" prefHeight="30.0" prefWidth="200.0" scaleZ="50.0" value="1.0" />
-      <GridPane fx:id="mazeGridPane" layoutX="50.0" layoutY="50.0" prefHeight="500.0" prefWidth="500.0">
+      <Rectangle disable="true" fill="#1f262a" height="675.0" stroke="#1f262a" strokeType="INSIDE" strokeWidth="0.0" width="600.0" />
+      <GridPane fx:id="mazeGridPane" layoutX="50.0" layoutY="50.0" prefHeight="500.0" prefWidth="500.0" stylesheets="@../../../Css/CSS.css">
          <columnConstraints>
             <ColumnConstraints />
             <ColumnConstraints />
@@ -29,21 +27,36 @@
             <RowConstraints />
             <RowConstraints />
          </rowConstraints></GridPane>
-      <AnchorPane layoutX="276.0" layoutY="560.0" prefHeight="48.0" prefWidth="48.0">
+      <Circle fx:id="playerCircle" fill="#20bf55" radius="52.0" stroke="BLACK" strokeType="INSIDE" />
+      <AnchorPane fx:id="playScreen" prefHeight="675.0" prefWidth="600.0">
          <children>
-            <ImageView fx:id="playImage" fitHeight="48.0" fitWidth="48.0">
-               <image>
-                  <Image url="@../../../Images/play-button-arrowhead.png" />
-               </image>
-            </ImageView>
-            <ImageView fx:id="pauseImage" fitHeight="48.0" fitWidth="48.0" visible="false">
-               <image>
-                  <Image url="@../../../Images/pause.png" />
-               </image>
-            </ImageView>
-            <Button mnemonicParsing="false" onAction="#toggle" opacity="0.0" prefHeight="48.0" prefWidth="48.0" text="Button" />
+            <Slider fx:id="speedSlider" blockIncrement="0.5" layoutX="200.0" layoutY="632.5" max="4.0" min="-4.0" prefHeight="30.0" prefWidth="200.0" value="1.0" />
+            <AnchorPane layoutX="276.0" layoutY="582.5" prefHeight="48.0" prefWidth="48.0">
+               <children>
+                  <ImageView fx:id="playImage" fitHeight="48.0" fitWidth="48.0">
+                     <image>
+                        <Image url="@../../../Images/play-button-arrowhead.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="pauseImage" fitHeight="48.0" fitWidth="48.0" visible="false">
+                     <image>
+                        <Image url="@../../../Images/pause.png" />
+                     </image>
+                  </ImageView>
+                  <Button mnemonicParsing="false" onAction="#toggle" opacity="0.0" prefHeight="48.0" prefWidth="48.0" text="Button" />
+               </children>
+            </AnchorPane>
          </children>
       </AnchorPane>
-      <Circle fx:id="playerCircle" fill="#20bf55" radius="52.0" stroke="BLACK" strokeType="INSIDE" />
+      <AnchorPane fx:id="buildScreen" prefHeight="675.0" prefWidth="600.0" visible="false">
+         <children>
+            <Rectangle fx:id="clickDetection" fill="#1fff90" height="500.0" layoutX="50.0" layoutY="50.0" opacity="0.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="500.0" />
+            <Button layoutX="51.0" layoutY="594.0" mnemonicParsing="false" onAction="#placeModeOn" text="Place" />
+            <Button layoutX="129.0" layoutY="594.0" mnemonicParsing="false" onAction="#placeModeOff" text="Remove" />
+            <Button layoutX="301.0" layoutY="594.0" mnemonicParsing="false" text="Undo" />
+            <Button layoutX="222.0" layoutY="594.0" mnemonicParsing="false" onAction="#clear" text="Clear" />
+         </children>
+      </AnchorPane>
+      <Button layoutX="500.0" layoutY="600.0" mnemonicParsing="false" onAction="#toggleBuildMode" text="Button" />
    </children>
 </AnchorPane>
