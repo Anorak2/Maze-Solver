@@ -61,7 +61,7 @@ public class MazeSolverController implements Initializable {
     Block[][] mainMaze;
     //(Row, col)
     int[] startLocation = new int[2];
-    int gridSize = 8;
+    int gridSize = 8, max = gridSize-1;
     long tileSize = (long) 500/gridSize;
     boolean finished = false, isPlaying = false, placeMode = false, isBuild = false;
     Queue<int[]> path = new LinkedList<>();
@@ -77,7 +77,7 @@ public class MazeSolverController implements Initializable {
         playerCircle.setRadius(tileSize/2);
         playerCircle.setCenterX(50 + playerCircle.getRadius() + gridSize*startLocation[1]);
         playerCircle.setCenterY(50 + playerCircle.getRadius() + gridSize*startLocation[0]);
-        clickDetection.setOnMouseClicked(e -> click(e));
+        clickDetection.setOnMouseClicked(this::click);
 
         startMazeAlgorithm();
         slider();
@@ -200,7 +200,7 @@ public class MazeSolverController implements Initializable {
         }
         int row = (int) ((e.getY())/tileSize);
         int col = (int) ((e.getX())/tileSize);
-        if(placeMode){
+        if(placeMode && inBounds(row, col)){
             mainMaze[row][col] = new Block(1);
         }
         else{
@@ -213,6 +213,9 @@ public class MazeSolverController implements Initializable {
         displayMaze();
     }
 
+    private boolean inBounds(int row, int col){
+        return row <= max && row >= 0 && col <= max && col >= 0;
+    }
     private void finish(){
         finished = true;
     }
@@ -267,70 +270,70 @@ public class MazeSolverController implements Initializable {
         int[] roundness = {0, 0, 0, 0};
         int roundnessValue = 10;
         //If it is not an edge
-        if(row+1 <= 7 && row-1 >= 0 && col+1 <= 7 && col-1 >= 0){
+        if(row+1 <= max && row-1 >= 0 && col+1 <= max && col-1 >= 0){
             //Checks up and left
             if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
-                roundness[0] = roundnessValue;
+                roundness[3] = roundnessValue;
             }
             //Checks up and right
             if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
-                roundness[1] = roundnessValue;
+                roundness[2] = roundnessValue;
             }
             //Checks down and right
             if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
-                roundness[2] = roundnessValue;
+                roundness[1] = roundnessValue;
             }
             //Checks down and left
             if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
-                roundness[3] = roundnessValue;
+                roundness[0] = roundnessValue;
             }
         }
         //If it is an edge
         else{
             //-------Corners-------
-            if((row + 1 >= 7 && col - 1 <= 0) || (row + 1 >= 7 && col + 1 >= 7) ||
-                    (row - 1 <= 0 && col + 1 >= 7) || (row - 1 <= 0 && col - 1 <= 0)) {
-                //top left corner
-                if (row + 1 >= 7 && col - 1 <= 0) {
+            if((row + 1 > max && col - 1 < 0) || (row + 1 > max && col + 1 > max) ||
+                    (row - 1 < 0 && col + 1 > max) || (row - 1 < 0 && col - 1 < 0)) {
+                //top left corner (clear)
+                if (row - 1 < 0 && col - 1 < 0) {
                     roundness[0] = roundnessValue;
                     //Checks up and right
                     if(mainMaze[row][col+1].canMoveHere) {
                         roundness[1] = roundnessValue;
                     }
                     //Checks down and right
-                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
                         roundness[2] = roundnessValue;
                     }
                     //Checks down and left
-                    if(mainMaze[row-1][col].canMoveHere ) {
+                    if(mainMaze[row+1][col].canMoveHere ) {
                         roundness[3] = roundnessValue;
                     }
                 }
-                //top right corner
-                else if (row + 1 >= 7) {
+                //top right corner (clear)
+                else if (row - 1 < 0) {
                     roundness[1] = roundnessValue;
                     //Checks up and left
                     if(mainMaze[row][col-1].canMoveHere) {
                         roundness[0] = roundnessValue;
                     }
                     //Checks down and right
-                    if(mainMaze[row-1][col].canMoveHere) {
+                    if(mainMaze[row+1][col].canMoveHere) {
                         roundness[2] = roundnessValue;
                     }
                     //Checks down and left
-                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
                         roundness[3] = roundnessValue;
                     }
                 }
-                //bottom right corner
-                else if (col + 1 >= 7) {
+                //bottom right corner (clear)
+                else if (col + 1 > max) {
                     roundness[2] = roundnessValue;
                     //Checks up and left
-                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
+                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
                         roundness[0] = roundnessValue;
                     }
                     //Checks up and right
-                    if(mainMaze[row+1][col].canMoveHere) {
+                    if(mainMaze[row-1][col].canMoveHere) {
                         roundness[1] = roundnessValue;
                     }
                     //Checks down and left
@@ -338,15 +341,15 @@ public class MazeSolverController implements Initializable {
                         roundness[3] = roundnessValue;
                     }
                 }
-                //bottom left corner
+                //bottom left corner (clear)
                 else {
                     roundness[3] = roundnessValue;
                     //Checks up and left
-                    if(mainMaze[row+1][col].canMoveHere) {
+                    if(mainMaze[row-1][col].canMoveHere) {
                         roundness[0] = roundnessValue;
                     }
                     //Checks up and right
-                    if(mainMaze[row+1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
+                    if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col+1].canMoveHere) {
                         roundness[1] = roundnessValue;
                     }
                     //Checks down and right
@@ -359,8 +362,8 @@ public class MazeSolverController implements Initializable {
 
             //-------Edges-------
             else{
-                //up
-                if(row + 1 >= 7){
+                //down edge
+                if(row + 1 > max){
                     //Checks up and left
                     if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
                         roundness[0] = roundnessValue;
@@ -378,9 +381,9 @@ public class MazeSolverController implements Initializable {
                         roundness[3] = roundnessValue;
                     }
                 }
-                //down
-                else if(row - 1 <= 0){
-                    //Checks up and right
+                //up edge
+                else if(row - 1 < 0){
+                    //Checks up and left
                     if(mainMaze[row][col-1].canMoveHere) {
                         roundness[0] = roundnessValue;
                     }
@@ -398,7 +401,7 @@ public class MazeSolverController implements Initializable {
                     }
                 }
                 //left
-                else if(col - 1 <= 0){
+                else if(col - 1 < 0){
                     //Checks up and left
                     if(mainMaze[row-1][col].canMoveHere) {
                         roundness[0] = roundnessValue;
@@ -418,6 +421,7 @@ public class MazeSolverController implements Initializable {
                 }
                 //right
                 else{
+                    //checks up and left
                     if(mainMaze[row-1][col].canMoveHere && mainMaze[row][col-1].canMoveHere) {
                         roundness[0] = roundnessValue;
                     }
@@ -437,13 +441,13 @@ public class MazeSolverController implements Initializable {
             }
         }
 
-            StringBuilder build = new StringBuilder();
+        StringBuilder build = new StringBuilder();
         build.append("-fx-background-color: #20bf55; -fx-background-radius: ");
         for(int i = 0; i < 4; i++){
             build.append(" ");
             build.append(roundness[i]);
         }
-        //build.append(";");
+        build.append(";");
 
         return build.toString();
     }
