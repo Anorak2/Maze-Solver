@@ -42,7 +42,6 @@ public class MazeSolverController implements Initializable {
         }
     }
 
-
     @FXML
     GridPane mazeGridPane;
     @FXML
@@ -72,7 +71,7 @@ public class MazeSolverController implements Initializable {
         mainMaze = new Block[gridSize][gridSize];
         mazeGridPane.getChildren().clear();
         loadPreset(1);
-        //printMaze();
+        printMaze();
         displayMaze();
         playerCircle.setRadius(tileSize/2);
         playerCircle.setCenterX(50 + playerCircle.getRadius() + gridSize*startLocation[1]);
@@ -84,8 +83,8 @@ public class MazeSolverController implements Initializable {
     }
 
     public void startMazeAlgorithm(){
-        path.clear();
-        masterAnimation = new SequentialTransition();
+        path = new LinkedList<>();
+        masterAnimation.getChildren().clear();
         mazeAlgorithm(startLocation[0], startLocation[1]);
         setupAnimations();
     }
@@ -101,22 +100,21 @@ public class MazeSolverController implements Initializable {
             finish();
             return;
         }
-
         //Checking to move up/right/left/down
         int common = row+1;
-        if(canMove(row, col, common, col) && !mainMaze[common][col].isExplored && !finished){
+        if(canMove(row, col, common, col) && !(mainMaze[common][col].isExplored) && !finished){
             mazeAlgorithm(common, col);
         }
         common = col+1;
-        if(canMove(row, col, row, common) && !mainMaze[row][common].isExplored && !finished){
+        if(canMove(row, col, row, common) && !(mainMaze[row][common].isExplored) && !finished){
             mazeAlgorithm(row, common);
         }
         common = col -1;
-        if(canMove(row, col, row, common) && !mainMaze[row][common].isExplored && !finished){
+        if(canMove(row, col, row, common) && !(mainMaze[row][common].isExplored) && !finished){
             mazeAlgorithm(row, common);
         }
         common = row - 1;
-        if(canMove(row, col, common, col) && !mainMaze[common][col].isExplored && !finished){
+        if(canMove(row, col, common, col) && !(mainMaze[common][col].isExplored) && !finished){
             mazeAlgorithm(common, col);
         }
     }
@@ -159,6 +157,13 @@ public class MazeSolverController implements Initializable {
         }
         masterAnimation.setOnFinished(e -> toggle());
     }
+    public void setUnexplored(){
+        for(int row = 0; row < gridSize; row++){
+            for(int col = 0; col<gridSize; col++){
+                mainMaze[row][col].isExplored = false;
+            }
+        }
+    }
 
     public void toggle(){
         if(isPlaying){
@@ -174,6 +179,7 @@ public class MazeSolverController implements Initializable {
     public void slider(){
         speedSlider.valueProperty().addListener((observable, oldValue, newValue) -> masterAnimation.setRate(( double) newValue));
     }
+
     public void placeModeOn(){
         placeMode = true;
     }
@@ -189,6 +195,7 @@ public class MazeSolverController implements Initializable {
             mainMaze[0][0] = new Block(2);
             finished = false;
             displayMaze();
+            setUnexplored();
             startMazeAlgorithm();
         }
     }
@@ -226,14 +233,14 @@ public class MazeSolverController implements Initializable {
                 if(mainMaze[x][y].isWall) {
                     System.out.print("0 ");
                 }
+                else if(mainMaze[x][y].canMoveHere) {
+                    System.out.print(". ");
+                }
                 else if(mainMaze[x][y].isStart) {
                     System.out.print("S ");
                 }
                 else if(mainMaze[x][y].isFinish) {
                     System.out.print("F ");
-                }
-                else if(mainMaze[x][y].canMoveHere) {
-                    System.out.print(". ");
                 }
             }
             System.out.println();
@@ -442,7 +449,7 @@ public class MazeSolverController implements Initializable {
         }
 
         StringBuilder build = new StringBuilder();
-        build.append("-fx-background-color: #20bf55; -fx-background-radius: ");
+        build.append("-fx-background-color: #25D961; -fx-background-radius: ");
         for(int i = 0; i < 4; i++){
             build.append(" ");
             build.append(roundness[i]);
@@ -455,7 +462,7 @@ public class MazeSolverController implements Initializable {
         if(x == 0){
             int[] temp;
             temp = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
-            for(int z = 0; z < 8; z++){
+            for(int z = 0; z < gridSize; z++){
                 loadPresetHelper(temp, z);
             }
         }
@@ -479,7 +486,7 @@ public class MazeSolverController implements Initializable {
         }
     }
     private void loadPresetHelper(int[] list, int currentRow){
-        for(int i = 0; i < 8; i++){
+        for(int i = 0; i < gridSize; i++){
             mainMaze[currentRow][i] = new Block(list[i]);
         }
     }
